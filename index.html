@@ -261,6 +261,13 @@ input,textarea,button{font-family:inherit;font-size:inherit}
 </nav>
 
 <div class="backdrop" id="backdrop"></div>
+<div id="delDialog" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,.4);-webkit-display:flex;display:flex;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:24px 20px 16px;width:280px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-size:.95rem;font-weight:600;margin-bottom:6px">确认删除</div>
+    <div id="delDialogName" style="font-size:.85rem;color:#888;margin-bottom:18px"></div>
+    <div style="display:flex;gap:10px"><button id="delCancel" style="flex:1;padding:10px;border:1px solid #eee;border-radius:8px;background:#fff;font-size:.86rem;cursor:pointer">取消</button><button id="delConfirm" style="flex:1;padding:10px;border:none;border-radius:8px;background:#e06377;color:#fff;font-size:.86rem;cursor:pointer">删除</button></div>
+  </div>
+</div>
 
 <div class="add-sheet" id="addSheet">
   <div class="handle"></div>
@@ -303,7 +310,7 @@ function fetchWithTimeout(url,opts,ms){
 
 function fetchCloud(){
   setSyncStatus('loading');
-  return fetchWithTimeout(API+'/api/data',{},8000).then(function(r){return r.json()}).then(function(d){
+  return fetchWithTimeout(API+'/api/data',{},15000).then(function(r){return r.json()}).then(function(d){
     cloud=d;setSyncStatus('ok');return d;
   }).catch(function(){setSyncStatus('err');return cloud});
 }
@@ -312,7 +319,7 @@ function pushCloud(data){
   setSyncStatus('loading');
   return fetchWithTimeout(API+'/api/data',{
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
-  },8000).then(function(r){return r.json()}).then(function(d){
+  },15000).then(function(r){return r.json()}).then(function(d){
     cloud=d;setSyncStatus('ok');return d;
   }).catch(function(){setSyncStatus('err');return cloud});
 }
@@ -473,11 +480,21 @@ function bindEditable(){
   }
 }
 
+var pendingDelId='';
 function delSpot(id,el){
-  if(!el.classList.contains('confirm')){el.classList.add('confirm');el.textContent='确认删除？';setTimeout(function(){el.classList.remove('confirm');el.textContent='🗑️'},3000);return}
-  var data={deletedSpots:{}};data.deletedSpots[id]=true;
-  pushCloud(data).then(renderAll);
+  pendingDelId=id;
+  var card=el.closest('.spot'),name=card?card.querySelector('h3').textContent.replace(/📷.*/,'').trim():'此景点';
+  document.getElementById('delDialogName').textContent='「'+name+'」将从行程中移除';
+  document.getElementById('delDialog').style.display='flex';
 }
+document.getElementById('delCancel').addEventListener('click',function(){document.getElementById('delDialog').style.display='none';pendingDelId=''});
+document.getElementById('delConfirm').addEventListener('click',function(){
+  document.getElementById('delDialog').style.display='none';
+  if(!pendingDelId)return;
+  var data={deletedSpots:{}};data.deletedSpots[pendingDelId]=true;
+  pendingDelId='';
+  pushCloud(data).then(renderAll);
+});
 
 function restoreSpot(id){
   var data={deletedSpots:{}};data.deletedSpots[id]=false;
@@ -690,7 +707,7 @@ function renderAll(){renderItinerary();renderShopping();renderChecklist();checkM
 // ===== INIT + POLLING =====
 renderAll();
 fetchCloud().then(function(){renderAll()});
-setInterval(function(){fetchCloud().then(function(){renderAll()})},5000);
+setInterval(function(){fetchCloud().then(function(){renderAll()})},10000);
 </script>
 </body>
 </html>
