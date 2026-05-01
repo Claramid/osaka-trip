@@ -269,18 +269,25 @@ function setSyncStatus(s){
   syncLabel.textContent=s==='ok'?'已同步':s==='loading'?'同步中…':'离线';
 }
 
+function fetchWithTimeout(url,opts,ms){
+  return new Promise(function(resolve,reject){
+    var timer=setTimeout(function(){reject(new Error('timeout'))},ms||8000);
+    fetch(url,opts).then(function(r){clearTimeout(timer);resolve(r)}).catch(function(e){clearTimeout(timer);reject(e)});
+  });
+}
+
 function fetchCloud(){
   setSyncStatus('loading');
-  return fetch(API+'/api/data').then(function(r){return r.json()}).then(function(d){
+  return fetchWithTimeout(API+'/api/data',{},8000).then(function(r){return r.json()}).then(function(d){
     cloud=d;setSyncStatus('ok');return d;
   }).catch(function(){setSyncStatus('err');return cloud});
 }
 
 function pushCloud(data){
   setSyncStatus('loading');
-  return fetch(API+'/api/data',{
+  return fetchWithTimeout(API+'/api/data',{
     method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
-  }).then(function(r){return r.json()}).then(function(d){
+  },8000).then(function(r){return r.json()}).then(function(d){
     cloud=d;setSyncStatus('ok');return d;
   }).catch(function(){setSyncStatus('err');return cloud});
 }
@@ -575,6 +582,7 @@ document.querySelector('.mt-close').addEventListener('click',function(e){e.stopP
 function renderAll(){renderItinerary();renderShopping();renderChecklist();renderNotes();checkMentions()}
 
 // ===== INIT + POLLING =====
+renderAll();
 fetchCloud().then(function(){renderAll()});
 setInterval(function(){fetchCloud().then(function(){renderAll()})},5000);
 </script>
