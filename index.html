@@ -114,6 +114,16 @@ input,textarea,button{font-family:inherit;font-size:inherit}
 .mention-toast.show{transform:translateY(0)}
 .mention-toast .mt-close{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.7}
 
+.deleted-toggle{font-size:.75rem;color:var(--text3);cursor:pointer;text-align:center;padding:4px 0;margin-bottom:6px}
+.deleted-toggle:active{color:var(--accent)}
+.deleted-list{display:none;margin-bottom:10px}
+.deleted-list.open{display:block}
+.deleted-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px 14px;margin-bottom:6px;display:-webkit-flex;display:flex;align-items:center;gap:10px;opacity:.6}
+.deleted-item .di-info{-webkit-flex:1;flex:1;min-width:0}
+.deleted-item .di-name{font-size:.88rem;font-weight:600}
+.deleted-item .di-time{font-size:.72rem;color:var(--text3)}
+.deleted-item .restore-btn{font-size:.78rem;color:var(--accent);border:1px solid var(--accent);border-radius:12px;padding:3px 12px;cursor:pointer;white-space:nowrap;-webkit-flex-shrink:0;flex-shrink:0}
+.deleted-item .restore-btn:active{background:var(--accent);color:#fff}
 .add-spot-btn{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:10px;cursor:pointer;color:var(--text3);font-size:.85rem;transition:all .15s}
 .add-spot-btn:active{border-color:var(--accent);color:var(--accent)}
 .spot-actions .act-btn.del{color:var(--text3)}
@@ -451,6 +461,10 @@ function renderItinerary(){
       html+=renderSpotCard(asp,s,true);
       prevConn='';
     }
+    var delCount=0,delHtml='';
+    for(var k=0;k<day.spots.length;k++){if(s.deletedSpots&&s.deletedSpots[day.spots[k].id]){delCount++;delHtml+='<div class="deleted-item"><div class="di-info"><div class="di-name">'+day.spots[k].icon+' '+esc(day.spots[k].name)+'</div><div class="di-time">'+esc(day.spots[k].time)+'</div></div><div class="restore-btn" onclick="restoreSpot(\''+day.spots[k].id+'\')">恢复</div></div>';}}
+    for(var k=0;k<added.length;k++){if(s.deletedSpots&&s.deletedSpots[added[k].id]){delCount++;delHtml+='<div class="deleted-item"><div class="di-info"><div class="di-name">'+(added[k].icon||'📍')+' '+esc(added[k].name)+'</div><div class="di-time">'+esc(added[k].time)+'</div></div><div class="restore-btn" onclick="restoreSpot(\''+added[k].id+'\')">恢复</div></div>';}}
+    if(delCount){html+='<div class="deleted-toggle" onclick="this.nextElementSibling.classList.toggle(\'open\');this.textContent=this.nextElementSibling.classList.contains(\'open\')?\'收起已删除\':\'查看已删除 ('+delCount+')\'">查看已删除 ('+delCount+')</div><div class="deleted-list">'+delHtml+'</div>';}
     html+='<div class="add-spot-btn" onclick="openAddSheet(\''+day.day+'\')">+ 添加景点到 '+day.day+'</div>';
   }
   document.getElementById('tab-itinerary').innerHTML=html;
@@ -472,6 +486,11 @@ function bindEditable(){
 function delSpot(id,el){
   if(!el.classList.contains('confirm')){el.classList.add('confirm');el.textContent='确认删除？';setTimeout(function(){el.classList.remove('confirm');el.textContent='🗑️'},3000);return}
   var data={deletedSpots:{}};data.deletedSpots[id]=true;
+  pushCloud(data).then(renderAll);
+}
+
+function restoreSpot(id){
+  var data={deletedSpots:{}};data.deletedSpots[id]=false;
   pushCloud(data).then(renderAll);
 }
 
