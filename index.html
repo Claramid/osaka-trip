@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>大阪·京都·奈良 5.14-5.19</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-text-size-adjust:100%}
+:root{
+  --bg:#fafaf8;--card:#fff;--accent:#c45c3e;--accent-light:#fdf0ec;
+  --text:#1a1a1a;--text2:#888;--text3:#b0b0b0;--border:#eee;
+  --green:#5db075;--blue:#5b8def;--purple:#9b7ed8;--orange:#e8a87c;
+  --radius:10px;--shadow:0 1px 6px rgba(0,0,0,.06);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+html{font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue","Noto Sans SC",sans-serif;background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased;padding-bottom:calc(60px + var(--safe-bottom))}
+a{color:var(--accent);text-decoration:none}
+input,textarea,button{font-family:inherit;font-size:inherit}
+
+.header{padding:40px 20px 20px;text-align:center}
+.header h1{font-size:1.5rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px}
+.header .meta{display:-webkit-flex;display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+.header .pill{font-size:.75rem;color:var(--text2);border:1px solid var(--border);border-radius:14px;padding:3px 12px;background:var(--card)}
+
+.user-bar{position:sticky;top:0;z-index:100;background:rgba(250,250,248,.92);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:10px 16px;display:-webkit-flex;display:flex;align-items:center;gap:10px}
+.user-bar .avatar-lg{width:34px;height:34px;border-radius:50%;display:-webkit-flex;display:flex;align-items:center;justify-content:center;font-size:.85rem;color:#fff;font-weight:700;-webkit-flex-shrink:0;flex-shrink:0;transition:all .2s}
+.user-bar .name-wrap{-webkit-flex:1;flex:1;display:-webkit-flex;display:flex;align-items:center;gap:8px;min-width:0}
+.user-bar .name-wrap input{border:none;border-bottom:2px solid var(--accent);border-radius:0;padding:4px 2px;font-size:1rem;font-weight:600;width:100px;background:transparent;color:var(--text)}
+.user-bar .name-wrap input::placeholder{color:var(--text3);font-weight:400}
+.user-bar .name-wrap input:focus{outline:none;border-bottom-color:var(--accent)}
+.user-bar .name-label{font-size:.72rem;color:var(--accent);font-weight:500;white-space:nowrap}
+.sync-dot{width:8px;height:8px;border-radius:50%;-webkit-flex-shrink:0;flex-shrink:0;transition:background .3s}
+.sync-dot.ok{background:var(--green)}.sync-dot.loading{background:var(--orange)}.sync-dot.err{background:#e06377}
+.sync-label{font-size:.68rem;color:var(--text3);white-space:nowrap}
+
+.bottom-tabs{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(250,250,248,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:-webkit-flex;display:flex;padding-bottom:var(--safe-bottom)}
+.bottom-tabs .btab{-webkit-flex:1;flex:1;text-align:center;padding:8px 0 6px;font-size:.68rem;color:var(--text2);cursor:pointer;-webkit-user-select:none;user-select:none;transition:color .15s}
+.bottom-tabs .btab .btab-icon{font-size:1.2rem;display:block;margin-bottom:2px}
+.bottom-tabs .btab.active{color:var(--accent)}
+
+.container{max-width:640px;margin:0 auto;padding:0 16px 20px}
+.tab-content{display:none}.tab-content.active{display:block}
+
+.day-divider{display:-webkit-flex;display:flex;align-items:center;gap:10px;margin:24px 0 14px;padding:0 2px}
+.day-chip{background:var(--accent);color:#fff;font-size:.78rem;font-weight:700;padding:4px 12px;border-radius:14px;white-space:nowrap;-webkit-flex-shrink:0;flex-shrink:0}
+.day-title{font-size:.92rem;font-weight:600;color:var(--text)}
+.day-sub{font-size:.75rem;color:var(--text2);margin-top:1px}
+
+.spot{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);margin-bottom:10px;overflow:hidden;transition:box-shadow .15s}
+.spot:active{box-shadow:0 0 0 2px var(--accent-light)}
+.spot-head{display:-webkit-flex;display:flex;align-items:flex-start;gap:10px;padding:14px 14px 0}
+.spot-icon{width:36px;height:36px;border-radius:8px;display:-webkit-flex;display:flex;align-items:center;justify-content:center;font-size:1.1rem;-webkit-flex-shrink:0;flex-shrink:0}
+.spot-icon.scenic{background:#e8f8f5}.spot-icon.food{background:#fde8e8}.spot-icon.shop{background:#f0ecf8}.spot-icon.walk{background:#e8f5e9}.spot-icon.transport{background:#e3f0fa}
+.spot-head-text{-webkit-flex:1;flex:1;min-width:0}
+.spot-head-text h3{font-size:.95rem;font-weight:600;line-height:1.4}
+.spot-time-tag{font-size:.7rem;color:var(--text2);background:var(--bg);border-radius:10px;padding:2px 8px;white-space:nowrap;-webkit-flex-shrink:0;flex-shrink:0;margin-top:2px}
+
+.spot-body{padding:8px 14px 12px}
+.spot-desc{font-size:.85rem;color:var(--text2);line-height:1.65}
+[contenteditable]{outline:none;border-radius:4px;transition:background .15s;-webkit-user-modify:read-write-plaintext-only}
+[contenteditable]:focus{background:var(--accent-light)}
+
+.key-info{display:-webkit-flex;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.key-tag{font-size:.73rem;padding:3px 10px;border-radius:12px;font-weight:500}
+.key-tag.price{background:#e8f5e9;color:#2e7d32}
+.key-tag.addr{background:#e3f0fa;color:#1565c0}
+.key-tag.time{background:#fff3e0;color:#e65100}
+.key-tag.note{background:#fce4ec;color:#c62828}
+.key-tag.tip{background:#f3e5f5;color:#6a1b9a}
+.key-tag.link{background:var(--accent-light);color:var(--accent);cursor:pointer}
+
+.photo-btn{display:inline-block;font-size:.7rem;color:var(--text3);border:1px solid var(--border);border-radius:10px;padding:1px 8px;cursor:pointer;margin-left:6px;vertical-align:middle;transition:all .12s}
+.photo-btn:active{border-color:var(--accent);color:var(--accent)}
+.photo-strip{padding:6px 14px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
+.photo-strip::-webkit-scrollbar{display:none}
+.photo-strip:empty{display:none;padding:0}
+.photo-thumb{width:64px;height:64px;border-radius:8px;object-fit:cover;display:inline-block;margin-right:6px;vertical-align:top;border:1px solid var(--border)}
+.photo-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent}
+.photo-overlay.show{display:-webkit-flex;display:flex}
+.photo-overlay img{max-width:92vw;max-height:80vh;border-radius:8px;object-fit:contain}
+.photo-overlay .close-btn{position:absolute;top:16px;right:16px;color:#fff;font-size:1.5rem;cursor:pointer;width:36px;height:36px;display:-webkit-flex;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.15);border-radius:50%}
+
+.conn{padding:2px 0 2px 30px;font-size:.75rem;color:var(--text3);display:-webkit-flex;display:flex;align-items:center;gap:4px}
+.conn::before{content:"";display:inline-block;width:1px;height:16px;background:var(--border);margin-right:6px}
+
+.spot-actions{display:-webkit-flex;display:flex;align-items:center;gap:0;border-top:1px solid var(--border);margin-top:8px}
+.spot-actions .act-btn{-webkit-flex:1;flex:1;text-align:center;padding:8px 0;font-size:.78rem;color:var(--text2);cursor:pointer;-webkit-user-select:none;user-select:none;transition:color .12s;border-right:1px solid var(--border)}
+.spot-actions .act-btn:last-child{border-right:none}
+.spot-actions .act-btn:active,.spot-actions .act-btn.voted{color:var(--accent)}
+
+.cmt-area{padding:0 14px 10px;display:none}
+.cmt-area.open{display:block}
+.cmt-item{display:-webkit-flex;display:flex;gap:8px;margin-bottom:8px;align-items:flex-start}
+.avatar-sm{width:24px;height:24px;border-radius:50%;display:-webkit-flex;display:flex;align-items:center;justify-content:center;font-size:.68rem;color:#fff;font-weight:600;-webkit-flex-shrink:0;flex-shrink:0}
+.cmt-bubble{background:var(--bg);border-radius:8px;padding:6px 10px;font-size:.82rem;-webkit-flex:1;flex:1}
+.cmt-bubble .cn{font-weight:600;font-size:.76rem;margin-bottom:1px}
+.cmt-bubble .ct{font-size:.68rem;color:var(--text3);margin-top:2px}
+.cmt-bubble .reply-quote{background:#f0ede8;border-left:2px solid var(--accent);border-radius:4px;padding:3px 8px;margin-bottom:4px;font-size:.75rem;color:var(--text2)}
+.cmt-bubble .reply-quote .rq-name{font-weight:600;color:var(--accent);margin-right:4px}
+.cmt-bubble .reply-btn{font-size:.68rem;color:var(--text3);cursor:pointer;display:inline-block;margin-left:6px}
+.cmt-bubble .reply-btn:active{color:var(--accent)}
+.cmt-input{display:-webkit-flex;display:flex;gap:6px;margin-top:6px;position:relative}
+.cmt-input input{-webkit-flex:1;flex:1;border:1px solid var(--border);border-radius:16px;padding:6px 12px;font-size:.82rem;background:var(--bg)}
+.cmt-input button{background:var(--accent);color:#fff;border:none;border-radius:16px;padding:6px 14px;font-size:.82rem;cursor:pointer;white-space:nowrap}
+.reply-hint{font-size:.72rem;color:var(--accent);padding:2px 0 0 12px;display:none;align-items:center;gap:4px}
+.reply-hint.show{display:-webkit-flex;display:flex}
+.reply-hint .cancel-reply{cursor:pointer;color:var(--text3);margin-left:4px;font-size:.78rem}
+
+.mention-toast{position:fixed;top:0;left:0;right:0;z-index:400;padding:10px 16px;padding-top:calc(10px + env(safe-area-inset-top,0px));background:var(--accent);color:#fff;font-size:.84rem;text-align:center;transform:translateY(-100%);transition:transform .3s cubic-bezier(.4,0,.2,1);pointer-events:auto;cursor:pointer}
+.mention-toast.show{transform:translateY(0)}
+.mention-toast .mt-close{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.7}
+
+.section-title{font-size:.95rem;font-weight:600;margin:20px 0 10px;display:-webkit-flex;display:flex;align-items:center;gap:6px}
+.shop-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:-webkit-flex;display:flex;align-items:flex-start;gap:10px}
+.shop-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;display:-webkit-flex;display:flex;align-items:center;justify-content:center;-webkit-flex-shrink:0;flex-shrink:0;transition:all .15s;margin-top:1px;font-size:.7rem;color:transparent}
+.shop-check.done{background:var(--green);border-color:var(--green);color:#fff}
+.shop-info{-webkit-flex:1;flex:1;min-width:0}
+.shop-info h4{font-size:.9rem;font-weight:600}
+.shop-info .shop-note{font-size:.78rem;color:var(--text2);margin-top:2px}
+.shop-info .shop-where{font-size:.75rem;color:var(--accent);margin-top:3px}
+.shop-for{font-size:.68rem;color:#fff;padding:2px 8px;border-radius:8px;-webkit-flex-shrink:0;flex-shrink:0;align-self:flex-start;margin-top:2px}
+
+.tip-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.tip-block summary{padding:14px;font-size:.9rem;font-weight:600;cursor:pointer;display:-webkit-flex;display:flex;align-items:center;gap:8px;-webkit-user-select:none;user-select:none;list-style:none}
+.tip-block summary::-webkit-details-marker{display:none}
+.tip-block summary::after{content:">";margin-left:auto;font-size:1rem;color:var(--text3);transition:transform .2s;font-weight:400}
+.tip-block[open] summary::after{transform:rotate(90deg)}
+.tip-block .tip-body{padding:0 14px 14px}
+.tip-block .tip-body li{padding:6px 0;border-bottom:1px solid var(--border);font-size:.84rem;display:-webkit-flex;display:flex;align-items:flex-start;gap:6px;list-style:none}
+.tip-block .tip-body li:last-child{border-bottom:none}
+.tip-block .tip-body .ic{-webkit-flex-shrink:0;flex-shrink:0;width:20px;text-align:center;font-size:.85rem}
+.checklist-item{display:-webkit-flex;display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.checklist-item:last-child{border-bottom:none}
+.checklist-item input[type=checkbox]{width:18px;height:18px;-webkit-flex-shrink:0;flex-shrink:0;accent-color:var(--accent)}
+
+.fab{position:fixed;bottom:calc(68px + var(--safe-bottom));right:16px;z-index:150;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 3px 12px rgba(196,92,62,.3);display:-webkit-flex;display:flex;align-items:center;justify-content:center;transition:transform .15s}
+.fab:active{transform:scale(.92)}
+.notes-sheet{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--card);border-radius:14px 14px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:70vh;display:-webkit-flex;display:flex;flex-direction:column;padding-bottom:var(--safe-bottom)}
+.notes-sheet.open{transform:translateY(0)}
+.notes-sheet .handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px}
+.notes-sheet .ns-head{padding:6px 16px 10px;font-weight:600;font-size:.92rem;display:-webkit-flex;display:flex;justify-content:space-between;align-items:center}
+.notes-sheet .ns-body{-webkit-flex:1;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px}
+.notes-sheet textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.86rem;resize:none;min-height:80px;font-family:inherit;margin:8px 0}
+.notes-sheet .ns-send{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.88rem;margin-bottom:12px}
+.note-item{background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;font-size:.82rem;position:relative}
+.note-item .nm{font-size:.72rem;color:var(--text3);margin-top:3px}
+.note-item .nd{position:absolute;top:8px;right:10px;font-size:.75rem;color:var(--text3);cursor:pointer}
+
+.backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:250;display:none}
+.backdrop.show{display:block}
+
+@media(min-width:641px){
+  .bottom-tabs{max-width:640px;left:50%;transform:translateX(-50%);border-radius:14px 14px 0 0}
+  .fab{right:calc(50% - 320px + 16px)}
+}
+@media print{.bottom-tabs,.fab,.notes-sheet,.backdrop,.user-bar,.spot-actions,.cmt-area,.photo-btn,.photo-strip{display:none!important}body{padding-bottom:0;background:#fff}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>大阪 · 京都 · 奈良</h1>
+  <div class="meta">
+    <span class="pill">5.14 - 5.19</span>
+    <span class="pill">梅田王子酒店</span>
+    <span class="pill">关西机场往返</span>
+  </div>
+</div>
+
+<div class="user-bar">
+  <div class="avatar-lg" id="userAvatar" style="background:#ccc">?</div>
+  <div class="name-wrap">
+    <span class="name-label">我是</span>
+    <input id="userName" placeholder="输入昵称" maxlength="8">
+  </div>
+  <div class="sync-dot loading" id="syncDot"></div>
+  <span class="sync-label" id="syncLabel">连接中…</span>
+</div>
+
+<div class="container">
+<div class="tab-content active" id="tab-itinerary"></div>
+<div class="tab-content" id="tab-shopping"></div>
+<div class="tab-content" id="tab-tips">
+
+<details class="tip-block" open>
+  <summary>🎫 交通卡 ICOCA</summary>
+  <ul class="tip-body">
+    <li><span class="ic">📍</span>关西机场 JR 售票机购买，¥2000/张（含 ¥1500 储值 + ¥500 押金）</li>
+    <li><span class="ic">🚃</span>JR、地铁、巴士、便利店、自贩机通用</li>
+    <li><span class="ic">💰</span>充值：各车站精算机，¥1000 起充</li>
+    <li><span class="ic">🔄</span>退卡：JR 西日本绿色窗口，余额扣 ¥220 手续费 + 返 ¥500 押金</li>
+  </ul>
+</details>
+<details class="tip-block" open>
+  <summary>📋 需要预约的项目</summary>
+  <ul class="tip-body">
+    <li><span class="ic">✅</span><strong>清水寺、金阁寺、伏见稻荷、东大寺、春日大社</strong> — 无需预约</li>
+    <li><span class="ic">⚠️</span><strong>先斗町川床晚餐 (D3)</strong> — 5 月旺季建议 TableCheck / Tabelog 预约</li>
+    <li><span class="ic">⚠️</span><strong>嵯峨野小火车</strong> — 当日票常售罄，提前官网或 JR 绿色窗口购票</li>
+    <li><span class="ic">✅</span><strong>一般餐厅</strong>（拉面、大阪烧、串炸）— 直接排队</li>
+    <li><span class="ic">⚠️</span><strong>怀石 / 高档日料</strong> — 提前 1-2 周预约</li>
+  </ul>
+</details>
+<details class="tip-block">
+  <summary>💴 支付 & 现金</summary>
+  <ul class="tip-body">
+    <li><span class="ic">💳</span>商场、连锁餐厅、便利店接受信用卡和移动支付</li>
+    <li><span class="ic">💴</span>建议带 3-5 万日元现金，寺庙 / 小店 / 公交有时只收现金</li>
+    <li><span class="ic">🏧</span>7-Eleven ATM 支持银联卡取现，24h</li>
+    <li><span class="ic">🧾</span>退税：单店满 ¥5000（不含税），带护照</li>
+  </ul>
+</details>
+<details class="tip-block">
+  <summary>📱 实用 App</summary>
+  <ul class="tip-body">
+    <li><span class="ic">🗺️</span><strong>Google Maps</strong> — 日本导航首选，换乘极其准确</li>
+    <li><span class="ic">🍽️</span><strong>Tabelog</strong> — 日本的大众点评，3.5 分以上就是好店</li>
+    <li><span class="ic">🌐</span><strong>Google 翻译</strong> — 拍照翻译菜单很好用</li>
+    <li><span class="ic">📶</span>提前买 eSIM 或机场租 WiFi 蛋</li>
+  </ul>
+</details>
+<details class="tip-block" open>
+  <summary>⚡ 行前 Checklist</summary>
+  <div class="tip-body" id="checklistWrap"></div>
+</details>
+
+</div>
+</div>
+
+<nav class="bottom-tabs">
+  <div class="btab active" data-tab="itinerary"><span class="btab-icon">📅</span>行程</div>
+  <div class="btab" data-tab="shopping"><span class="btab-icon">🛍️</span>购物</div>
+  <div class="btab" data-tab="tips"><span class="btab-icon">📌</span>提示</div>
+</nav>
+
+<button class="fab" id="fabBtn">📝</button>
+<div class="backdrop" id="backdrop"></div>
+<div class="notes-sheet" id="notesSheet">
+  <div class="handle"></div>
+  <div class="ns-head"><span>旅伴笔记</span><span style="font-size:.8rem;color:var(--text3);cursor:pointer" id="closeSheet">关闭</span></div>
+  <div class="ns-body" id="notesList"></div>
+  <div style="padding:0 16px">
+    <textarea id="noteInput" placeholder="写下任何想法、修改建议……"></textarea>
+    <button class="ns-send" id="noteSend">保存笔记</button>
+  </div>
+</div>
+
+<div class="mention-toast" id="mentionToast"><span id="mentionText"></span><span class="mt-close">✕</span></div>
+
+<div class="photo-overlay" id="photoOverlay">
+  <div class="close-btn" id="photoClose">✕</div>
+  <img id="photoFull" src="">
+</div>
+
+<script>
+// ===== API =====
+var API='https://osaka-trip-api.maluyao600.workers.dev';
+var cloud={};
+var openCmts={};
+var syncDot=document.getElementById('syncDot');
+var syncLabel=document.getElementById('syncLabel');
+
+function setSyncStatus(s){
+  syncDot.className='sync-dot '+s;
+  syncLabel.textContent=s==='ok'?'已同步':s==='loading'?'同步中…':'离线';
+}
+
+function fetchCloud(){
+  setSyncStatus('loading');
+  return fetch(API+'/api/data').then(function(r){return r.json()}).then(function(d){
+    cloud=d;setSyncStatus('ok');return d;
+  }).catch(function(){setSyncStatus('err');return cloud});
+}
+
+function pushCloud(data){
+  setSyncStatus('loading');
+  return fetch(API+'/api/data',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)
+  }).then(function(r){return r.json()}).then(function(d){
+    cloud=d;setSyncStatus('ok');return d;
+  }).catch(function(){setSyncStatus('err');return cloud});
+}
+
+function deleteNoteCloud(idx){
+  setSyncStatus('loading');
+  return fetch(API+'/api/delete-note',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({noteIndex:idx})
+  }).then(function(r){return r.json()}).then(function(d){
+    cloud=d;setSyncStatus('ok');return d;
+  }).catch(function(){setSyncStatus('err');return cloud});
+}
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML}
+var palette=['#c45c3e','#5db075','#5b8def','#9b7ed8','#e8a87c','#e06377','#44a8b3'];
+function getC(n){var h=0;for(var i=0;i<n.length;i++)h=n.charCodeAt(i)+((h<<5)-h);return palette[Math.abs(h)%palette.length]}
+
+var replyTarget={};
+var seenMentions={};
+try{var _sm=localStorage.getItem('trip-seen-mentions');if(_sm)seenMentions=JSON.parse(_sm)}catch(e){}
+
+// ===== USER (local only) =====
+var $name=document.getElementById('userName'),$av=document.getElementById('userAvatar');
+function updAvatar(){var n=$name.value.trim();if(n){$av.textContent=n[0];$av.style.background=getC(n)}else{$av.textContent='?';$av.style.background='#ccc'}}
+$name.addEventListener('input',function(){localStorage.setItem('trip-user',$name.value.trim());updAvatar()});
+(function(){var u=localStorage.getItem('trip-user');if(u)$name.value=u;updAvatar()})();
+
+// ===== TABS =====
+var btabs=document.querySelectorAll('.btab');
+for(var i=0;i<btabs.length;i++){
+  btabs[i].addEventListener('click',function(){
+    for(var j=0;j<btabs.length;j++){btabs[j].classList.remove('active');document.querySelectorAll('.tab-content')[j].classList.remove('active')}
+    this.classList.add('active');
+    document.getElementById('tab-'+this.getAttribute('data-tab')).classList.add('active');
+  });
+}
+
+// ===== ITINERARY DATA =====
+var days=[
+  {day:'D1',date:'5/14 周三',title:'抵达 + 梅田',sub:'下午到达，轻松适应',spots:[
+    {id:'d1-kix',icon:'✈️',type:'transport',name:'关西机场 → 梅田王子酒店',time:'14:00–16:00',desc:'落地后在 JR 售票机买 ICOCA（¥2000/张，含 ¥1500 储值），坐 JR Haruka 或南海特急到梅田，约 50–60 分钟。',tags:[{t:'ICOCA ¥2000/张',c:'price'},{t:'约60分钟',c:'time'}]},
+    {id:'d1-sky',icon:'🌃',type:'scenic',name:'梅田空中庭园展望台',time:'17:30–19:30',desc:'梅田蓝天大厦顶楼，360° 俯瞰大阪。离酒店步行可达，适合第一晚。建议日落前上去，看黄昏到夜景的变化。',tags:[{t:'¥1500/人',c:'price'},{t:'到 21:30',c:'time'},{t:'免预约',c:'tip'}],conn:'步行到梅田站地下街'},
+    {id:'d1-din',icon:'🍜',type:'food',name:'梅田晚餐',time:'19:30–21:00',desc:'梅田站地下街（Whity 梅田、阪急三番街）拉面、定食、居酒屋随缘。第一晚不用太卷。',tags:[{t:'随到随吃',c:'tip'}]}
+  ]},
+  {day:'D2',date:'5/15 周四',title:'大阪购物 + 道顿堀',sub:'心斋桥买 HOKA & 二奢 → 道顿堀',spots:[
+    {id:'d2-hoka',icon:'👟',type:'shop',name:'HOKA 心斋桥直营店',time:'10:30–12:00',desc:'全日本最大 HOKA 直营店，3D 量脚扫描，Bondi 9 在这里买最稳。',tags:[{t:'南船场 3-5-11',c:'addr'},{t:'11:00–20:00',c:'time'},{t:'鞋码标 cm，38码≈24cm',c:'note'},{t:'退税需护照',c:'tip'}],conn:'心斋桥筋步行 5 分钟'},
+    {id:'d2-2nd',icon:'💍',type:'shop',name:'心斋桥二奢 · RH 的耳环',time:'12:00–14:00',desc:'推荐大黑屋（连锁）、Brand Off 心斋桥店、以及沿线小型 vintage 店。S/A/B/C 分级严格，A 级以上几乎全新。',tags:[{t:'记得要退税单据',c:'tip'}],conn:'步行到道顿堀，约 10 分钟'},
+    {id:'d2-dot',icon:'🐙',type:'food',name:'道顿堀 · 大阪名物',time:'14:00–17:00',desc:'格力高跑者打卡 → 章鱼烧「くくる」→ 大阪烧「千房」→ 串炸「だるま」→ 法善寺横丁。边走边吃就对了。',tags:[{t:'无需预约',c:'tip'}],conn:'步行到难波'},
+    {id:'d2-drug',icon:'💊',type:'shop',name:'难波药妆扫货',time:'17:00–19:00',desc:'松本清、SUNDRUG、唐吉诃德（24h 营业）集中在这一带。列好清单集中采购。',tags:[{t:'唐吉诃德 24h',c:'time'}]}
+  ]},
+  {day:'D3',date:'5/16 周五',title:'京都东山 + 鸭川',sub:'清水寺 → 祗园 → 锦市场 → 鸭川 → 先斗町',spots:[
+    {id:'d3-jr',icon:'🚃',type:'transport',name:'梅田 → 京都（JR 新快速）',time:'08:00–08:45',desc:'JR 大阪站坐新快速到京都站，刷 ICOCA 直接进站，随到随坐。到京都站后换巴士 206 路到清水道。',tags:[{t:'¥580 单程',c:'price'},{t:'约30分钟',c:'time'},{t:'早出发人少',c:'tip'}],conn:'巴士 206 路 → 清水道站'},
+    {id:'d3-kiyo',icon:'⛩️',type:'scenic',name:'清水寺',time:'09:00–11:00',desc:'京都最标志性的寺庙，悬空的清水舞台俯瞰全景，5 月新绿满山。从清水坂上去，音羽瀑布方向下来接三年坂。',tags:[{t:'¥400/人',c:'price'},{t:'免预约',c:'tip'}],conn:'下山步行 → 三年坂二年坂'},
+    {id:'d3-st',icon:'🏘️',type:'walk',name:'三年坂 · 二年坂 · 石塀小路',time:'11:00–12:30',desc:'京都最有味道的石板小路群，传统町屋、手工艺品店、甜品店。推荐「京ばあむ」抹茶年轮蛋糕、清水烧陶器杯（伴手礼）。',tags:[],conn:'步行 → 八坂神社'},
+    {id:'d3-ysk',icon:'⛩️',type:'scenic',name:'八坂神社 + 花见小路',time:'12:30–13:15',desc:'祗园的标志，朱红大门出片。花见小路是传统艺伎街区，运气好能偶遇艺伎。免费，半小时够。',tags:[{t:'免费',c:'price'}],conn:'祗园附近午餐'},
+    {id:'d3-lunch',icon:'🍽️',type:'food',name:'午餐 · 祗园四条一带',time:'13:15–14:15',desc:'「ひさご」亲子丼（老字号，排队但值得）或鲱鱼荞麦面。不想排队，四条通沿线随便一家定食。',tags:[],conn:'步行 10 分钟到锦市场'},
+    {id:'d3-nsk',icon:'🏪',type:'food',name:'锦市场 · 京都的厨房',time:'14:30–16:00',desc:'400 米室内市场，边走边吃：现烤章鱼蛋、抹茶冰淇淋、出汁卵烧。也适合买长辈伴手礼（渍物、抹茶）。',tags:[{t:'多数店 17:00 关',c:'note'}],conn:'步行 5 分钟到鸭川'},
+    {id:'d3-kamo',icon:'🌿',type:'walk',name:'鸭川散步 · 四条→三条',time:'16:30–17:30',desc:'今天最放松的环节——沿鸭川北岸慢走 20–30 分钟。5 月傍晚河边的人在野餐、弹吉他，其他城市给不了的松弛感。坐在石阶上看对岸先斗町灯火渐亮。',tags:[{t:'5月有纳凉床搭建',c:'tip'}],conn:'走到先斗町，紧挨鸭川'},
+    {id:'d3-din',icon:'🍶',type:'food',name:'先斗町晚餐 · 川床',time:'17:30–19:30',desc:'京都最有氛围的美食小巷，很多餐厅有面朝鸭川的川床座位。找一家有川床的居酒屋或小料理店，¥2000–3000/人。',tags:[{t:'建议预约川床位',c:'note'},{t:'TableCheck',c:'link',url:'https://www.tablecheck.com/zh-CN/'},{t:'Tabelog',c:'link',url:'https://tabelog.com/'}]}
+  ]},
+  {day:'D4',date:'5/17 周六',title:'京都西线 · 岚山 + 金阁寺',sub:'竹林 → 渡月桥 → 金阁寺 → 伏见稻荷',spots:[
+    {id:'d4-ara',icon:'🎋',type:'scenic',name:'岚山 · 竹林 + 渡月桥',time:'09:00–12:30',desc:'JR 嵯峨野线从京都站出发约 15 分钟到岚山。9 点前竹林小径人最少，阳光透过竹子很梦幻。然后走到渡月桥看远山和大堰川。天龙寺庭园值得一看（¥500）。',tags:[{t:'竹林免费',c:'price'},{t:'早到人少',c:'tip'}],conn:'岚山午餐 → 巴士去金阁寺'},
+    {id:'d4-kin',icon:'✨',type:'scenic',name:'金阁寺',time:'14:00–15:30',desc:'金碧辉煌的金阁倒映在镜湖池中，京都最经典画面。单行道参观约 40 分钟，门票是御守风格纸符（纪念品）。',tags:[{t:'¥500/人',c:'price'},{t:'免预约',c:'tip'},{t:'下午光线最好',c:'note'}],conn:'巴士到京都站 → JR 到稻荷'},
+    {id:'d4-fsh',icon:'⛩️',type:'scenic',name:'伏见稻荷大社 · 千本鸟居',time:'16:00–17:30',desc:'密密麻麻的朱红鸟居从山脚排到山顶。不需要爬到顶，走到四ツ辻观景台（约 30–40 分钟）然后返回。下午 4 点后人少光线好。',tags:[{t:'免费·24h',c:'price'},{t:'JR 稻荷站出来即到',c:'addr'}],conn:'JR 稻荷 → 大阪，约 45 分钟'}
+  ]},
+  {day:'D5',date:'5/18 周日',title:'奈良半日 + 大阪扫尾',sub:'上午喂小鹿，下午补伴手礼',spots:[
+    {id:'d5-nara',icon:'🦌',type:'scenic',name:'奈良公园 + 东大寺 + 春日大社',time:'09:00–13:00',desc:'JR 到鹤桥换近铁，约 50 分钟到奈良。路线：兴福寺（路过）→ 奈良公园喂鹿（鹿仙贝 ¥200）→ 东大寺大佛（世界最大木造建筑）→ 春日大社石灯笼参道。',tags:[{t:'东大寺 ¥600',c:'price'},{t:'鹿仙贝 ¥200',c:'price'},{t:'鹿很社会，果断投喂',c:'note'}],conn:'近铁回大阪难波'},
+    {id:'d5-omi',icon:'🎁',type:'shop',name:'伴手礼扫货 · 查漏补缺',time:'15:00–18:00',desc:'心斋桥 / 难波补齐伴手礼。大丸心斋桥 B1 食品层有精致盒装甜品，送长辈体面。',tags:[]}
+  ]},
+  {day:'D6',date:'5/19 周一',title:'梅田收尾 + 回程',sub:'上午最后逛，中午出发',spots:[
+    {id:'d6-am',icon:'🏬',type:'shop',name:'梅田最后半天',time:'09:00–11:30',desc:'退房寄存行李。阪急梅田本店（美妆）、Grand Front（杂货）、Yodobashi（扭蛋）。或者去中崎町——文艺复古小街区，独立咖啡馆和古着店。',tags:[],conn:'JR Haruka → 关西机场，提前 2h 到'},
+    {id:'d6-kix',icon:'✈️',type:'transport',name:'关西机场 · 最后免税',time:'12:00–',desc:'机场免税店买白い恋人、ROYCE 生巧、Tokyo Banana。液体化妆品建议在机场免税买，免得托运麻烦。',tags:[{t:'热门款常断货',c:'note'}]}
+  ]}
+];
+
+// ===== RENDER =====
+function renderItinerary(){
+  var s=cloud,html='';
+  for(var d=0;d<days.length;d++){
+    var day=days[d];
+    html+='<div class="day-divider"><span class="day-chip">'+day.day+'</span><div><div class="day-title">'+day.date+' · '+day.title+'</div><div class="day-sub">'+day.sub+'</div></div></div>';
+    for(var i=0;i<day.spots.length;i++){
+      var sp=day.spots[i];
+      if(i>0&&day.spots[i-1].conn) html+='<div class="conn">'+day.spots[i-1].conn+'</div>';
+      var savedDesc=(s.edits&&s.edits[sp.id]&&s.edits[sp.id].desc)||sp.desc;
+      var cmts=(s.comments&&s.comments[sp.id])||[];
+      var photos=(s.photos&&s.photos[sp.id])||[];
+      html+='<div class="spot" data-id="'+sp.id+'">';
+      html+='<div class="spot-head"><div class="spot-icon '+sp.type+'">'+sp.icon+'</div>';
+      html+='<div class="spot-head-text"><h3>'+sp.name+'<span class="photo-btn" onclick="addPhoto(\''+sp.id+'\')">'+(photos.length?'📷 '+photos.length:'📷')+'</span></h3></div>';
+      html+='<span class="spot-time-tag">'+sp.time+'</span></div>';
+      if(photos.length){html+='<div class="photo-strip">';for(var p=0;p<photos.length;p++)html+='<img class="photo-thumb" src="'+esc(photos[p])+'" onclick="viewPhoto(this.src)">';html+='</div>';}
+      html+='<div class="spot-body"><div class="spot-desc" contenteditable="true" data-field="desc" data-id="'+sp.id+'">'+esc(savedDesc)+'</div>';
+      if(sp.tags&&sp.tags.length){html+='<div class="key-info">';for(var t=0;t<sp.tags.length;t++){var tg=sp.tags[t];html+=tg.url?'<a class="key-tag '+tg.c+'" href="'+tg.url+'" target="_blank">'+tg.t+'</a>':'<span class="key-tag '+tg.c+'">'+tg.t+'</span>';}html+='</div>';}
+      html+='</div>';
+      html+='<div class="spot-actions"><div class="act-btn" data-act="up" onclick="vote(this)">👍 想去</div><div class="act-btn" data-act="skip" onclick="vote(this)">🤔 可跳过</div><div class="act-btn" data-act="cmt" onclick="toggleCmt(this)">💬 '+cmts.length+'</div></div>';
+      html+='<div class="cmt-area'+(openCmts[sp.id]?' open':'')+'">';
+      for(var c=0;c<cmts.length;c++){var cm=cmts[c];html+='<div class="cmt-item"><div class="avatar-sm" style="background:'+cm.color+'">'+cm.name[0]+'</div><div class="cmt-bubble">';if(cm.replyTo){html+='<div class="reply-quote"><span class="rq-name">'+esc(cm.replyTo)+'</span>'+esc(cm.replyText||'')+'</div>';}html+='<div class="cn">'+esc(cm.name)+'<span class="reply-btn" onclick="setReply(\''+sp.id+'\',\''+esc(cm.name).replace(/'/g,"\\'")+'\',this)">回复</span></div>'+esc(cm.text)+'<div class="ct">'+cm.time+'</div></div></div>';}
+      html+='<div class="reply-hint'+(replyTarget[sp.id]?' show':'')+'" id="rh-'+sp.id+'">回复 <strong>'+(replyTarget[sp.id]?esc(replyTarget[sp.id]):'')+'</strong><span class="cancel-reply" onclick="cancelReply(\''+sp.id+'\')">✕</span></div>';
+      html+='<div class="cmt-input"><input placeholder="写评论…" onkeydown="if(event.key===\'Enter\')postCmt(this)"><button onclick="postCmt(this.previousElementSibling)">发送</button></div></div>';
+      html+='</div>';
+    }
+    if(day.spots.length&&day.spots[day.spots.length-1].conn) html+='<div class="conn">'+day.spots[day.spots.length-1].conn+'</div>';
+  }
+  document.getElementById('tab-itinerary').innerHTML=html;
+  bindEditable();
+}
+
+function bindEditable(){
+  var els=document.querySelectorAll('[contenteditable]');
+  for(var i=0;i<els.length;i++){
+    els[i].addEventListener('blur',function(){
+      var id=this.getAttribute('data-id'),f=this.getAttribute('data-field');
+      if(!id)return;
+      var data={edits:{}};data.edits[id]={};data.edits[id][f]=this.textContent;
+      pushCloud(data).then(renderAll);
+    });
+  }
+}
+
+function vote(el){
+  el.classList.toggle('voted');
+  var card=el.closest('.spot'),id=card?card.getAttribute('data-id'):'',act=el.getAttribute('data-act');
+  var name=$name.value.trim()||'匿名';
+  var data={votes:{}};data.votes[id]={};
+  if(el.classList.contains('voted')){data.votes[id][act]=[name]}
+  else{data.votes[id][act]=[]}
+  pushCloud(data);
+}
+
+function toggleCmt(el){
+  var card=el.closest('.spot'),id=card.getAttribute('data-id'),area=card.querySelector('.cmt-area');
+  area.classList.toggle('open');
+  openCmts[id]=area.classList.contains('open');
+}
+
+function postCmt(input){
+  var text=input.value.trim();if(!text)return;
+  var name=$name.value.trim()||'匿名旅伴',card=input.closest('.spot'),id=card?card.getAttribute('data-id'):'';
+  openCmts[id]=true;
+  var cmt={name:name,text:text,time:new Date().toLocaleString('zh-CN'),color:getC(name)};
+  if(replyTarget[id]){cmt.replyTo=replyTarget[id];var cmts=(cloud.comments&&cloud.comments[id])||[];for(var i=cmts.length-1;i>=0;i--){if(cmts[i].name===replyTarget[id]){cmt.replyText=cmts[i].text.length>20?cmts[i].text.substring(0,20)+'…':cmts[i].text;break}}delete replyTarget[id]}
+  var data={comments:{}};data.comments[id]=[cmt];
+  input.value='';
+  pushCloud(data).then(renderAll);
+}
+
+function setReply(spotId,name,el){
+  replyTarget[spotId]=name;
+  var hint=document.getElementById('rh-'+spotId);
+  if(hint){hint.classList.add('show');hint.innerHTML='回复 <strong>'+esc(name)+'</strong><span class="cancel-reply" onclick="cancelReply(\''+spotId+'\')">✕</span>'}
+  var area=el.closest('.cmt-area');if(area){var inp=area.querySelector('.cmt-input input');if(inp)inp.focus()}
+}
+function cancelReply(spotId){
+  delete replyTarget[spotId];
+  var hint=document.getElementById('rh-'+spotId);
+  if(hint)hint.classList.remove('show');
+}
+
+function addPhoto(spotId){
+  var input=document.createElement('input');
+  input.type='file';input.accept='image/*';input.multiple=true;
+  input.onchange=function(){
+    var files=input.files;if(!files.length)return;
+    if(!cloud.photos)cloud.photos={};if(!cloud.photos[spotId])cloud.photos[spotId]=[];
+    var remaining=files.length;
+    for(var i=0;i<files.length;i++){
+      (function(file){
+        var reader=new FileReader();
+        reader.onload=function(e){
+          cloud.photos[spotId].push(e.target.result);
+          remaining--;
+          if(remaining===0){renderItinerary();}
+        };
+        reader.readAsDataURL(file);
+      })(files[i]);
+    }
+  };
+  input.click();
+}
+function viewPhoto(src){document.getElementById('photoFull').src=src;document.getElementById('photoOverlay').classList.add('show')}
+document.getElementById('photoOverlay').addEventListener('click',function(){this.classList.remove('show')});
+document.getElementById('photoClose').addEventListener('click',function(e){e.stopPropagation();document.getElementById('photoOverlay').classList.remove('show')});
+
+// ===== SHOPPING =====
+var shopData=[
+  {id:'s1',name:'HOKA Bondi 9',who:'Lil',bg:'#c45c3e',where:'HOKA 心斋桥直营店',note:'全日本最大直营，3D 量脚'},
+  {id:'s2',name:'二奢耳环',who:'RH',bg:'#9b7ed8',where:'大黑屋 / Brand Off 心斋桥',note:'A 级以上品相'},
+  {id:'s3',name:'防晒（安耐晒/Allie）',who:'两人',bg:'#e8a87c',where:'松本清 / SUNDRUG',note:'金瓶经典'},
+  {id:'s4',name:'面膜（Lululun）',who:'两人',bg:'#e8a87c',where:'药妆店',note:'日本限定款多'},
+  {id:'s5',name:'眼药水（乐敦 Lycee）',who:'自用',bg:'#e8a87c',where:'药妆店',note:'粉色瓶'},
+  {id:'s6',name:'EVE 止痛药',who:'自用',bg:'#e8a87c',where:'药妆店',note:'白兔牌'}
+];
+var giftData=[
+  {id:'g1',name:'茶之菓（抹茶饼干）',who:'同学朋友',bg:'#5db075',where:'京都站 / 锦市场',note:'MALEBRANCHE 出品'},
+  {id:'g2',name:'宇治抹茶茶叶',who:'长辈',bg:'#44a8b3',where:'锦市场（一保堂/辻利）',note:'高级感，送长辈'},
+  {id:'g3',name:'京渍物',who:'长辈',bg:'#44a8b3',where:'锦市场',note:'京都特色，包装精美'},
+  {id:'g4',name:'ROYCE 生巧',who:'同学朋友',bg:'#5db075',where:'关西机场免税店',note:'经典，注意保冷'},
+  {id:'g5',name:'白い恋人',who:'多人分',bg:'#5b8def',where:'关西机场免税店',note:'24 枚入送同事'},
+  {id:'g6',name:'日本限定零食',who:'随手礼',bg:'#5b8def',where:'便利店 / 唐吉诃德',note:'Kit Kat 抹茶等'},
+  {id:'g7',name:'清水烧小杯',who:'特别的人',bg:'#e06377',where:'清水坂 / 二年坂',note:'手工陶器'},
+  {id:'g8',name:'扭蛋 / 盲盒',who:'朋友',bg:'#5db075',where:'Yodobashi / 唐吉诃德',note:'日本限定 IP'}
+];
+function renderShopping(){
+  var chk=cloud.shopChecked||{},html='';
+  html+='<div class="section-title">🎯 必买清单</div>';
+  for(var i=0;i<shopData.length;i++){var it=shopData[i];
+    html+='<div class="shop-item"><div class="shop-check'+(chk[it.id]?' done':'')+'" onclick="toggleCheck(\''+it.id+'\',this)">'+(chk[it.id]?'✓':'')+'</div><div class="shop-info"><h4>'+it.name+'</h4><div class="shop-note">'+it.note+'</div><div class="shop-where">📍 '+it.where+'</div></div><span class="shop-for" style="background:'+it.bg+'">'+it.who+'</span></div>';
+  }
+  html+='<div class="section-title" style="margin-top:24px">🎁 伴手礼</div>';
+  for(var i=0;i<giftData.length;i++){var it=giftData[i];
+    html+='<div class="shop-item"><div class="shop-check'+(chk[it.id]?' done':'')+'" onclick="toggleCheck(\''+it.id+'\',this)">'+(chk[it.id]?'✓':'')+'</div><div class="shop-info"><h4>'+it.name+'</h4><div class="shop-note">'+it.note+'</div><div class="shop-where">📍 '+it.where+'</div></div><span class="shop-for" style="background:'+it.bg+'">送'+it.who+'</span></div>';
+  }
+  document.getElementById('tab-shopping').innerHTML=html;
+}
+function toggleCheck(id,el){
+  var data={shopChecked:{}};data.shopChecked[id]=!el.classList.contains('done');
+  el.classList.toggle('done');el.textContent=el.classList.contains('done')?'✓':'';
+  pushCloud(data);
+}
+
+// ===== CHECKLIST =====
+var checkItems=['护照（有效期 6 个月以上）','机票确认单','酒店预订确认（梅田王子酒店）','Visit Japan Web 填写（入境+海关）','eSIM / WiFi 蛋','日元现金 3-5 万 或确认银联卡','舒适走路鞋（或到了买 Bondi 9）','防晒霜 + 遮阳帽','下载 Google Maps + Tabelog','先斗町川床餐厅预约'];
+function renderChecklist(){
+  var chks=cloud.checklist||[],html='';
+  for(var i=0;i<checkItems.length;i++) html+='<div class="checklist-item"><input type="checkbox" '+(chks[i]?'checked':'')+' onchange="saveChk()"><span>'+checkItems[i]+'</span></div>';
+  document.getElementById('checklistWrap').innerHTML=html;
+}
+function saveChk(){
+  var cbs=document.querySelectorAll('#checklistWrap input[type=checkbox]'),arr=[];
+  for(var i=0;i<cbs.length;i++)arr.push(cbs[i].checked);
+  pushCloud({checklist:arr});
+}
+
+// ===== NOTES =====
+var $fab=document.getElementById('fabBtn'),$sheet=document.getElementById('notesSheet'),$bk=document.getElementById('backdrop');
+$fab.addEventListener('click',function(){$sheet.classList.add('open');$bk.classList.add('show')});
+document.getElementById('closeSheet').addEventListener('click',function(){$sheet.classList.remove('open');$bk.classList.remove('show')});
+$bk.addEventListener('click',function(){$sheet.classList.remove('open');$bk.classList.remove('show')});
+
+document.getElementById('noteSend').addEventListener('click',function(){
+  var inp=document.getElementById('noteInput'),text=inp.value.trim();if(!text)return;
+  var name=$name.value.trim()||'匿名旅伴';
+  var data={notes:[{name:name,text:text,time:new Date().toLocaleString('zh-CN'),color:getC(name)}]};
+  inp.value='';
+  pushCloud(data).then(renderNotes);
+});
+function deleteNote(idx){deleteNoteCloud(idx).then(renderNotes)}
+function renderNotes(){
+  var notes=cloud.notes||[],el=document.getElementById('notesList');
+  if(!notes.length){el.innerHTML='<div style="font-size:.84rem;color:var(--text3);padding:12px 0;text-align:center">还没有笔记</div>';return}
+  var h='';
+  for(var i=0;i<notes.length;i++){var n=notes[i];
+    h+='<div class="note-item"><span class="nd" onclick="deleteNote('+i+')">✕</span><strong style="color:'+n.color+'">'+esc(n.name)+'</strong>：'+esc(n.text)+'<div class="nm">'+n.time+'</div></div>';
+  }
+  el.innerHTML=h;
+}
+
+// ===== MENTION CHECK =====
+function checkMentions(){
+  var me=$name.value.trim();if(!me)return;
+  var comments=cloud.comments||{};
+  for(var spotId in comments){
+    if(!comments.hasOwnProperty(spotId))continue;
+    var arr=comments[spotId];
+    for(var i=0;i<arr.length;i++){
+      var c=arr[i];
+      if(c.replyTo===me&&c.name!==me){
+        var key=c.name+'|'+c.time+'|'+c.text;
+        if(!seenMentions[key]){
+          seenMentions[key]=1;
+          try{localStorage.setItem('trip-seen-mentions',JSON.stringify(seenMentions))}catch(e){}
+          showMentionToast(c.name+' 回复了你：'+c.text,spotId);
+          return;
+        }
+      }
+    }
+  }
+}
+var mentionTimer=null;
+function showMentionToast(msg,spotId){
+  var toast=document.getElementById('mentionToast'),txt=document.getElementById('mentionText');
+  txt.textContent=msg.length>40?msg.substring(0,40)+'…':msg;
+  toast.classList.add('show');
+  toast.onclick=function(){toast.classList.remove('show');if(spotId){openCmts[spotId]=true;renderItinerary();var el=document.querySelector('[data-id="'+spotId+'"]');if(el)el.scrollIntoView({behavior:'smooth',block:'center'})}};
+  if(mentionTimer)clearTimeout(mentionTimer);
+  mentionTimer=setTimeout(function(){toast.classList.remove('show')},6000);
+}
+document.querySelector('.mt-close').addEventListener('click',function(e){e.stopPropagation();document.getElementById('mentionToast').classList.remove('show')});
+
+// ===== RENDER ALL =====
+function renderAll(){renderItinerary();renderShopping();renderChecklist();renderNotes();checkMentions()}
+
+// ===== INIT + POLLING =====
+fetchCloud().then(function(){renderAll()});
+setInterval(function(){fetchCloud().then(function(){renderAll()})},5000);
+</script>
+</body>
+</html>
