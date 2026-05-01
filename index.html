@@ -164,27 +164,14 @@ input,textarea,button{font-family:inherit;font-size:inherit}
 .checklist-item:last-child{border-bottom:none}
 .checklist-item input[type=checkbox]{width:18px;height:18px;-webkit-flex-shrink:0;flex-shrink:0;accent-color:var(--accent)}
 
-.fab{position:fixed;bottom:calc(68px + var(--safe-bottom));right:16px;z-index:150;width:46px;height:46px;border-radius:50%;background:var(--accent);color:#fff;border:none;font-size:1.2rem;cursor:pointer;box-shadow:0 3px 12px rgba(196,92,62,.3);display:-webkit-flex;display:flex;align-items:center;justify-content:center;transition:transform .15s}
-.fab:active{transform:scale(.92)}
-.notes-sheet{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--card);border-radius:14px 14px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:70vh;display:-webkit-flex;display:flex;flex-direction:column;padding-bottom:var(--safe-bottom)}
-.notes-sheet.open{transform:translateY(0)}
-.notes-sheet .handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px}
-.notes-sheet .ns-head{padding:6px 16px 10px;font-weight:600;font-size:.92rem;display:-webkit-flex;display:flex;justify-content:space-between;align-items:center}
-.notes-sheet .ns-body{-webkit-flex:1;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px}
-.notes-sheet textarea{width:100%;border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.86rem;resize:none;min-height:80px;font-family:inherit;margin:8px 0}
-.notes-sheet .ns-send{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.88rem;margin-bottom:12px}
-.note-item{background:var(--bg);border-radius:8px;padding:10px;margin-bottom:8px;font-size:.82rem;position:relative}
-.note-item .nm{font-size:.72rem;color:var(--text3);margin-top:3px}
-.note-item .nd{position:absolute;top:8px;right:10px;font-size:.75rem;color:var(--text3);cursor:pointer}
 
 .backdrop{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:250;display:none}
 .backdrop.show{display:block}
 
 @media(min-width:641px){
   .bottom-tabs{max-width:640px;left:50%;transform:translateX(-50%);border-radius:14px 14px 0 0}
-  .fab{right:calc(50% - 320px + 16px)}
 }
-@media print{.bottom-tabs,.fab,.notes-sheet,.backdrop,.user-bar,.spot-actions,.cmt-area,.photo-btn,.photo-strip{display:none!important}body{padding-bottom:0;background:#fff}}
+@media print{.bottom-tabs,.backdrop,.user-bar,.spot-actions,.cmt-area,.photo-btn,.photo-strip{display:none!important}body{padding-bottom:0;background:#fff}}
 </style>
 </head>
 <body>
@@ -273,17 +260,7 @@ input,textarea,button{font-family:inherit;font-size:inherit}
   <div class="btab" data-tab="tips"><span class="btab-icon">📌</span>提示</div>
 </nav>
 
-<button class="fab" id="fabBtn">📝</button>
 <div class="backdrop" id="backdrop"></div>
-<div class="notes-sheet" id="notesSheet">
-  <div class="handle"></div>
-  <div class="ns-head"><span>旅伴笔记</span><span style="font-size:.8rem;color:var(--text3);cursor:pointer" id="closeSheet">关闭</span></div>
-  <div class="ns-body" id="notesList"></div>
-  <div style="padding:0 16px">
-    <textarea id="noteInput" placeholder="写下任何想法、修改建议……"></textarea>
-    <button class="ns-send" id="noteSend">保存笔记</button>
-  </div>
-</div>
 
 <div class="add-sheet" id="addSheet">
   <div class="handle"></div>
@@ -646,29 +623,8 @@ function saveChk(){
   pushCloud({checklist:arr});
 }
 
-// ===== NOTES =====
-var $fab=document.getElementById('fabBtn'),$sheet=document.getElementById('notesSheet'),$bk=document.getElementById('backdrop');
-$fab.addEventListener('click',function(){$sheet.classList.add('open');$bk.classList.add('show')});
-document.getElementById('closeSheet').addEventListener('click',function(){$sheet.classList.remove('open');$bk.classList.remove('show')});
-$bk.addEventListener('click',function(){$sheet.classList.remove('open');document.getElementById('addSheet').classList.remove('open');$bk.classList.remove('show')});
-
-document.getElementById('noteSend').addEventListener('click',function(){
-  var inp=document.getElementById('noteInput'),text=inp.value.trim();if(!text)return;
-  var name=$name.value.trim()||'匿名旅伴';
-  var data={notes:[{name:name,text:text,time:new Date().toLocaleString('zh-CN'),color:getC(name)}]};
-  inp.value='';
-  pushCloud(data).then(renderNotes);
-});
-function deleteNote(idx){deleteNoteCloud(idx).then(renderNotes)}
-function renderNotes(){
-  var notes=cloud.notes||[],el=document.getElementById('notesList');
-  if(!notes.length){el.innerHTML='<div style="font-size:.84rem;color:var(--text3);padding:12px 0;text-align:center">还没有笔记</div>';return}
-  var h='';
-  for(var i=0;i<notes.length;i++){var n=notes[i];
-    h+='<div class="note-item"><span class="nd" onclick="deleteNote('+i+')">✕</span><strong style="color:'+n.color+'">'+esc(n.name)+'</strong>：'+esc(n.text)+'<div class="nm">'+n.time+'</div></div>';
-  }
-  el.innerHTML=h;
-}
+var $bk=document.getElementById('backdrop');
+$bk.addEventListener('click',function(){document.getElementById('addSheet').classList.remove('open');$bk.classList.remove('show')});
 
 // ===== MENTION CHECK =====
 function checkMentions(){
@@ -729,7 +685,7 @@ function exportData(){
 }
 
 // ===== RENDER ALL =====
-function renderAll(){renderItinerary();renderShopping();renderChecklist();renderNotes();checkMentions()}
+function renderAll(){renderItinerary();renderShopping();renderChecklist();checkMentions()}
 
 // ===== INIT + POLLING =====
 renderAll();
