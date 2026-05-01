@@ -90,6 +90,24 @@ export default {
         existing.checklist = incoming.checklist;
       }
 
+      // merge addedSpots (per day, dedup by id)
+      if (incoming.addedSpots) {
+        if (!existing.addedSpots) existing.addedSpots = {};
+        for (const [day, arr] of Object.entries(incoming.addedSpots)) {
+          if (!existing.addedSpots[day]) existing.addedSpots[day] = [];
+          const ids = new Set(existing.addedSpots[day].map(s => s.id));
+          for (const s of arr) {
+            if (!ids.has(s.id)) { existing.addedSpots[day].push(s); ids.add(s.id); }
+          }
+        }
+      }
+
+      // merge deletedSpots (flag merge)
+      if (incoming.deletedSpots) {
+        if (!existing.deletedSpots) existing.deletedSpots = {};
+        Object.assign(existing.deletedSpots, incoming.deletedSpots);
+      }
+
       await env.TRIP.put(KEY, JSON.stringify(existing));
 
       return new Response(JSON.stringify(existing), {

@@ -114,6 +114,23 @@ input,textarea,button{font-family:inherit;font-size:inherit}
 .mention-toast.show{transform:translateY(0)}
 .mention-toast .mt-close{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:1rem;opacity:.7}
 
+.add-spot-btn{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:14px;text-align:center;margin-bottom:10px;cursor:pointer;color:var(--text3);font-size:.85rem;transition:all .15s}
+.add-spot-btn:active{border-color:var(--accent);color:var(--accent)}
+.spot-actions .act-btn.del{color:var(--text3)}
+.spot-actions .act-btn.del:active,.spot-actions .act-btn.del.confirm{color:#e06377}
+.add-sheet{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--card);border-radius:14px 14px 0 0;box-shadow:0 -4px 24px rgba(0,0,0,.12);transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);max-height:80vh;display:-webkit-flex;display:flex;flex-direction:column;padding-bottom:var(--safe-bottom)}
+.add-sheet.open{transform:translateY(0)}
+.add-sheet .handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:10px auto 6px}
+.add-sheet .as-head{padding:6px 16px 10px;font-weight:600;font-size:.92rem;display:-webkit-flex;display:flex;justify-content:space-between;align-items:center}
+.add-sheet .as-body{-webkit-flex:1;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 12px}
+.add-sheet .as-row{margin-bottom:10px}
+.add-sheet .as-row label{display:block;font-size:.78rem;color:var(--text2);margin-bottom:3px}
+.add-sheet .as-row input,.add-sheet .as-row textarea,.add-sheet .as-row select{width:100%;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:.86rem;font-family:inherit;background:var(--bg)}
+.add-sheet .as-row textarea{resize:none;min-height:60px}
+.add-sheet .as-submit{width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.88rem;margin:4px 16px 12px;width:calc(100% - 32px)}
+.spot.added-spot{border-left:3px solid var(--green)}
+.spot.added-spot .added-by{font-size:.68rem;color:var(--green);margin-top:4px}
+
 .section-title{font-size:.95rem;font-weight:600;margin:20px 0 10px;display:-webkit-flex;display:flex;align-items:center;gap:6px}
 .shop-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;display:-webkit-flex;display:flex;align-items:flex-start;gap:10px}
 .shop-check{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);cursor:pointer;display:-webkit-flex;display:flex;align-items:center;justify-content:center;-webkit-flex-shrink:0;flex-shrink:0;transition:all .15s;margin-top:1px;font-size:.7rem;color:transparent}
@@ -249,6 +266,18 @@ input,textarea,button{font-family:inherit;font-size:inherit}
   </div>
 </div>
 
+<div class="add-sheet" id="addSheet">
+  <div class="handle"></div>
+  <div class="as-head"><span>添加景点</span><span style="font-size:.8rem;color:var(--text3);cursor:pointer" id="closeAdd">关闭</span></div>
+  <div class="as-body">
+    <div class="as-row"><label>景点名称</label><input id="addName" placeholder="例：黑门市场"></div>
+    <div class="as-row"><label>时间</label><input id="addTime" placeholder="例：10:00–12:00"></div>
+    <div class="as-row"><label>类型</label><select id="addType"><option value="scenic">景点</option><option value="food">美食</option><option value="shop">购物</option><option value="walk">散步</option><option value="transport">交通</option></select></div>
+    <div class="as-row"><label>描述</label><textarea id="addDesc" placeholder="简单写几句…"></textarea></div>
+  </div>
+  <button class="as-submit" id="addSubmit">添加到行程</button>
+</div>
+
 <div class="mention-toast" id="mentionToast"><span id="mentionText"></span><span class="mt-close">✕</span></div>
 
 <div class="photo-overlay" id="photoOverlay">
@@ -364,33 +393,65 @@ var days=[
 ];
 
 // ===== RENDER =====
+var typeIcons={scenic:'⛩️',food:'🍽️',shop:'🛍️',walk:'🚶',transport:'🚃'};
+
+function yenToCny(tagText){
+  var m=tagText.match(/[¥￥]([0-9,]+)/);
+  if(!m)return tagText;
+  var yen=parseInt(m[1].replace(/,/g,''),10);
+  if(isNaN(yen))return tagText;
+  var cny=Math.round(yen*0.048);
+  return tagText+'(≈¥'+cny+'元)';
+}
+
+function renderSpotCard(sp,s,isAdded){
+  var del=s.deletedSpots&&s.deletedSpots[sp.id];
+  if(del)return '';
+  var savedDesc=(s.edits&&s.edits[sp.id]&&s.edits[sp.id].desc)||sp.desc;
+  var cmts=(s.comments&&s.comments[sp.id])||[];
+  var photos=(s.photos&&s.photos[sp.id])||[];
+  var h='';
+  h+='<div class="spot'+(isAdded?' added-spot':'')+'" data-id="'+sp.id+'">';
+  h+='<div class="spot-head"><div class="spot-icon '+sp.type+'">'+(sp.icon||typeIcons[sp.type]||'📍')+'</div>';
+  h+='<div class="spot-head-text"><h3>'+esc(sp.name)+'<span class="photo-btn" onclick="addPhoto(\''+sp.id+'\')">'+(photos.length?'📷 '+photos.length:'📷')+'</span></h3></div>';
+  h+='<span class="spot-time-tag">'+esc(sp.time)+'</span></div>';
+  if(photos.length){h+='<div class="photo-strip">';for(var p=0;p<photos.length;p++)h+='<img class="photo-thumb" src="'+esc(photos[p])+'" onclick="viewPhoto(this.src)">';h+='</div>';}
+  h+='<div class="spot-body"><div class="spot-desc" contenteditable="true" data-field="desc" data-id="'+sp.id+'">'+esc(savedDesc)+'</div>';
+  if(sp.tags&&sp.tags.length){h+='<div class="key-info">';for(var t=0;t<sp.tags.length;t++){var tg=sp.tags[t];var label=tg.c==='price'?yenToCny(tg.t):tg.t;h+=tg.url?'<a class="key-tag '+tg.c+'" href="'+tg.url+'" target="_blank">'+label+'</a>':'<span class="key-tag '+tg.c+'">'+label+'</span>';}h+='</div>';}
+  if(isAdded&&sp.addedBy){h+='<div class="added-by">由 '+esc(sp.addedBy)+' 添加</div>';}
+  h+='</div>';
+  h+='<div class="spot-actions"><div class="act-btn" data-act="up" onclick="vote(this)">👍 想去</div><div class="act-btn" data-act="skip" onclick="vote(this)">🤔 可跳过</div><div class="act-btn" data-act="cmt" onclick="toggleCmt(this)">💬 '+cmts.length+'</div><div class="act-btn del" onclick="delSpot(\''+sp.id+'\',this)">🗑️</div></div>';
+  h+='<div class="cmt-area'+(openCmts[sp.id]?' open':'')+'">';
+  for(var c=0;c<cmts.length;c++){var cm=cmts[c];h+='<div class="cmt-item"><div class="avatar-sm" style="background:'+cm.color+'">'+cm.name[0]+'</div><div class="cmt-bubble">';if(cm.replyTo){h+='<div class="reply-quote"><span class="rq-name">'+esc(cm.replyTo)+'</span>'+esc(cm.replyText||'')+'</div>';}h+='<div class="cn">'+esc(cm.name)+'<span class="reply-btn" onclick="setReply(\''+sp.id+'\',\''+esc(cm.name).replace(/'/g,"\\'")+'\',this)">回复</span></div>'+esc(cm.text)+'<div class="ct">'+cm.time+'</div></div></div>';}
+  h+='<div class="reply-hint'+(replyTarget[sp.id]?' show':'')+'" id="rh-'+sp.id+'">回复 <strong>'+(replyTarget[sp.id]?esc(replyTarget[sp.id]):'')+'</strong><span class="cancel-reply" onclick="cancelReply(\''+sp.id+'\')">✕</span></div>';
+  h+='<div class="cmt-input"><input placeholder="写评论…" onkeydown="if(event.key===\'Enter\')postCmt(this)"><button onclick="postCmt(this.previousElementSibling)">发送</button></div></div>';
+  h+='</div>';
+  return h;
+}
+
 function renderItinerary(){
   var s=cloud,html='';
   for(var d=0;d<days.length;d++){
     var day=days[d];
     html+='<div class="day-divider"><span class="day-chip">'+day.day+'</span><div><div class="day-title">'+day.date+' · '+day.title+'</div><div class="day-sub">'+day.sub+'</div></div></div>';
+    var prevConn='';
     for(var i=0;i<day.spots.length;i++){
       var sp=day.spots[i];
-      if(i>0&&day.spots[i-1].conn) html+='<div class="conn">'+day.spots[i-1].conn+'</div>';
-      var savedDesc=(s.edits&&s.edits[sp.id]&&s.edits[sp.id].desc)||sp.desc;
-      var cmts=(s.comments&&s.comments[sp.id])||[];
-      var photos=(s.photos&&s.photos[sp.id])||[];
-      html+='<div class="spot" data-id="'+sp.id+'">';
-      html+='<div class="spot-head"><div class="spot-icon '+sp.type+'">'+sp.icon+'</div>';
-      html+='<div class="spot-head-text"><h3>'+sp.name+'<span class="photo-btn" onclick="addPhoto(\''+sp.id+'\')">'+(photos.length?'📷 '+photos.length:'📷')+'</span></h3></div>';
-      html+='<span class="spot-time-tag">'+sp.time+'</span></div>';
-      if(photos.length){html+='<div class="photo-strip">';for(var p=0;p<photos.length;p++)html+='<img class="photo-thumb" src="'+esc(photos[p])+'" onclick="viewPhoto(this.src)">';html+='</div>';}
-      html+='<div class="spot-body"><div class="spot-desc" contenteditable="true" data-field="desc" data-id="'+sp.id+'">'+esc(savedDesc)+'</div>';
-      if(sp.tags&&sp.tags.length){html+='<div class="key-info">';for(var t=0;t<sp.tags.length;t++){var tg=sp.tags[t];html+=tg.url?'<a class="key-tag '+tg.c+'" href="'+tg.url+'" target="_blank">'+tg.t+'</a>':'<span class="key-tag '+tg.c+'">'+tg.t+'</span>';}html+='</div>';}
-      html+='</div>';
-      html+='<div class="spot-actions"><div class="act-btn" data-act="up" onclick="vote(this)">👍 想去</div><div class="act-btn" data-act="skip" onclick="vote(this)">🤔 可跳过</div><div class="act-btn" data-act="cmt" onclick="toggleCmt(this)">💬 '+cmts.length+'</div></div>';
-      html+='<div class="cmt-area'+(openCmts[sp.id]?' open':'')+'">';
-      for(var c=0;c<cmts.length;c++){var cm=cmts[c];html+='<div class="cmt-item"><div class="avatar-sm" style="background:'+cm.color+'">'+cm.name[0]+'</div><div class="cmt-bubble">';if(cm.replyTo){html+='<div class="reply-quote"><span class="rq-name">'+esc(cm.replyTo)+'</span>'+esc(cm.replyText||'')+'</div>';}html+='<div class="cn">'+esc(cm.name)+'<span class="reply-btn" onclick="setReply(\''+sp.id+'\',\''+esc(cm.name).replace(/'/g,"\\'")+'\',this)">回复</span></div>'+esc(cm.text)+'<div class="ct">'+cm.time+'</div></div></div>';}
-      html+='<div class="reply-hint'+(replyTarget[sp.id]?' show':'')+'" id="rh-'+sp.id+'">回复 <strong>'+(replyTarget[sp.id]?esc(replyTarget[sp.id]):'')+'</strong><span class="cancel-reply" onclick="cancelReply(\''+sp.id+'\')">✕</span></div>';
-      html+='<div class="cmt-input"><input placeholder="写评论…" onkeydown="if(event.key===\'Enter\')postCmt(this)"><button onclick="postCmt(this.previousElementSibling)">发送</button></div></div>';
-      html+='</div>';
+      var isDel=s.deletedSpots&&s.deletedSpots[sp.id];
+      if(isDel)continue;
+      if(prevConn)html+='<div class="conn">'+prevConn+'</div>';
+      html+=renderSpotCard(sp,s,false);
+      prevConn=sp.conn||'';
     }
-    if(day.spots.length&&day.spots[day.spots.length-1].conn) html+='<div class="conn">'+day.spots[day.spots.length-1].conn+'</div>';
+    var added=(s.addedSpots&&s.addedSpots[day.day])||[];
+    for(var j=0;j<added.length;j++){
+      var asp=added[j];
+      if(s.deletedSpots&&s.deletedSpots[asp.id])continue;
+      if(prevConn)html+='<div class="conn">'+prevConn+'</div>';
+      html+=renderSpotCard(asp,s,true);
+      prevConn='';
+    }
+    html+='<div class="add-spot-btn" onclick="openAddSheet(\''+day.day+'\')">+ 添加景点到 '+day.day+'</div>';
   }
   document.getElementById('tab-itinerary').innerHTML=html;
   bindEditable();
@@ -407,6 +468,34 @@ function bindEditable(){
     });
   }
 }
+
+function delSpot(id,el){
+  if(!el.classList.contains('confirm')){el.classList.add('confirm');el.textContent='确认删除？';setTimeout(function(){el.classList.remove('confirm');el.textContent='🗑️'},3000);return}
+  var data={deletedSpots:{}};data.deletedSpots[id]=true;
+  pushCloud(data).then(renderAll);
+}
+
+var addingDay='';
+function openAddSheet(dayKey){
+  addingDay=dayKey;
+  document.getElementById('addSheet').classList.add('open');
+  document.getElementById('backdrop').classList.add('show');
+}
+document.getElementById('closeAdd').addEventListener('click',function(){document.getElementById('addSheet').classList.remove('open');document.getElementById('backdrop').classList.remove('show')});
+document.getElementById('addSubmit').addEventListener('click',function(){
+  var name=document.getElementById('addName').value.trim();
+  var time=document.getElementById('addTime').value.trim();
+  var type=document.getElementById('addType').value;
+  var desc=document.getElementById('addDesc').value.trim();
+  if(!name){document.getElementById('addName').focus();return}
+  var user=$name.value.trim()||'匿名旅伴';
+  var id='u-'+addingDay.toLowerCase()+'-'+Date.now();
+  var spot={id:id,icon:typeIcons[type]||'📍',type:type,name:name,time:time||'待定',desc:desc||'',tags:[],addedBy:user,addedAt:new Date().toLocaleString('zh-CN')};
+  var data={addedSpots:{}};data.addedSpots[addingDay]=[spot];
+  document.getElementById('addName').value='';document.getElementById('addTime').value='';document.getElementById('addDesc').value='';
+  document.getElementById('addSheet').classList.remove('open');document.getElementById('backdrop').classList.remove('show');
+  pushCloud(data).then(renderAll);
+});
 
 function vote(el){
   el.classList.toggle('voted');
@@ -526,7 +615,7 @@ function saveChk(){
 var $fab=document.getElementById('fabBtn'),$sheet=document.getElementById('notesSheet'),$bk=document.getElementById('backdrop');
 $fab.addEventListener('click',function(){$sheet.classList.add('open');$bk.classList.add('show')});
 document.getElementById('closeSheet').addEventListener('click',function(){$sheet.classList.remove('open');$bk.classList.remove('show')});
-$bk.addEventListener('click',function(){$sheet.classList.remove('open');$bk.classList.remove('show')});
+$bk.addEventListener('click',function(){$sheet.classList.remove('open');document.getElementById('addSheet').classList.remove('open');$bk.classList.remove('show')});
 
 document.getElementById('noteSend').addEventListener('click',function(){
   var inp=document.getElementById('noteInput'),text=inp.value.trim();if(!text)return;
