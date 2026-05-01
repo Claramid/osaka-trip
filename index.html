@@ -255,6 +255,15 @@ input,textarea,button{font-family:inherit;font-size:inherit}
   <div class="tip-body" id="checklistWrap"></div>
 </details>
 
+<details class="tip-block">
+  <summary>📊 导出协作数据</summary>
+  <div class="tip-body">
+    <div style="font-size:.82rem;color:var(--text2);margin-bottom:8px">导出所有投票、评论、笔记数据为 JSON，方便交给 AI 分析或调整行程。</div>
+    <button onclick="exportData()" style="width:100%;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:.86rem">复制数据到剪贴板</button>
+    <pre id="exportPreview" style="display:none;margin-top:8px;padding:10px;background:var(--bg);border-radius:8px;font-size:.72rem;white-space:pre-wrap;word-break:break-all;max-height:200px;overflow-y:auto"></pre>
+  </div>
+</details>
+
 </div>
 </div>
 
@@ -430,7 +439,11 @@ function renderSpotCard(sp,s,isAdded){
   if(sp.tags&&sp.tags.length){h+='<div class="key-info">';for(var t=0;t<sp.tags.length;t++){var tg=sp.tags[t];var label=tg.c==='price'?yenToCny(tg.t):tg.t;h+=tg.url?'<a class="key-tag '+tg.c+'" href="'+tg.url+'" target="_blank">'+label+'</a>':'<span class="key-tag '+tg.c+'">'+label+'</span>';}h+='</div>';}
   if(isAdded&&sp.addedBy){h+='<div class="added-by">由 '+esc(sp.addedBy)+' 添加</div>';}
   h+='</div>';
-  h+='<div class="spot-actions"><div class="act-btn" data-act="up" onclick="vote(this)">👍 想去</div><div class="act-btn" data-act="skip" onclick="vote(this)">🤔 可跳过</div><div class="act-btn" data-act="cmt" onclick="toggleCmt(this)">💬 '+cmts.length+'</div><div class="act-btn del" onclick="delSpot(\''+sp.id+'\',this)">🗑️</div></div>';
+  var votes=(s.votes&&s.votes[sp.id])||{};
+  var upNames=(votes.up||[]),skipNames=(votes.skip||[]);
+  var me=$name.value.trim()||'';
+  var meUp=upNames.indexOf(me)!==-1,meSkip=skipNames.indexOf(me)!==-1;
+  h+='<div class="spot-actions"><div class="act-btn'+(meUp?' voted':'')+'" data-act="up" onclick="vote(this)">👍 '+(upNames.length?upNames.join('、'):'想去')+'</div><div class="act-btn'+(meSkip?' voted':'')+'" data-act="skip" onclick="vote(this)">🤔 '+(skipNames.length?skipNames.join('、'):'可跳过')+'</div><div class="act-btn" data-act="cmt" onclick="toggleCmt(this)">💬 '+cmts.length+'</div><div class="act-btn del" onclick="delSpot(\''+sp.id+'\',this)">🗑️</div></div>';
   h+='<div class="cmt-area'+(openCmts[sp.id]?' open':'')+'">';
   for(var c=0;c<cmts.length;c++){var cm=cmts[c];h+='<div class="cmt-item"><div class="avatar-sm" style="background:'+cm.color+'">'+cm.name[0]+'</div><div class="cmt-bubble">';if(cm.replyTo){h+='<div class="reply-quote"><span class="rq-name">'+esc(cm.replyTo)+'</span>'+esc(cm.replyText||'')+'</div>';}h+='<div class="cn">'+esc(cm.name)+'<span class="reply-btn" onclick="setReply(\''+sp.id+'\',\''+esc(cm.name).replace(/'/g,"\\'")+'\',this)">回复</span></div>'+esc(cm.text)+'<div class="ct">'+cm.time+'</div></div></div>';}
   h+='<div class="reply-hint'+(replyTarget[sp.id]?' show':'')+'" id="rh-'+sp.id+'">回复 <strong>'+(replyTarget[sp.id]?esc(replyTarget[sp.id]):'')+'</strong><span class="cancel-reply" onclick="cancelReply(\''+sp.id+'\')">✕</span></div>';
@@ -517,12 +530,15 @@ document.getElementById('addSubmit').addEventListener('click',function(){
 });
 
 function vote(el){
-  el.classList.toggle('voted');
   var card=el.closest('.spot'),id=card?card.getAttribute('data-id'):'',act=el.getAttribute('data-act');
-  var name=$name.value.trim()||'匿名';
-  var data={votes:{}};data.votes[id]={};
-  if(el.classList.contains('voted')){data.votes[id][act]=[name]}
-  else{data.votes[id][act]=[]}
+  var name=$name.value.trim();if(!name){el.closest('.spot').querySelector('.spot-desc').textContent;return}
+  var votes=(cloud.votes&&cloud.votes[id])||{};
+  var arr=votes[act]?votes[act].slice():[];
+  var idx=arr.indexOf(name);
+  if(idx===-1){arr.push(name)}else{arr.splice(idx,1)}
+  var data={votes:{}};data.votes[id]={};data.votes[id][act]=arr;
+  cloud.votes=cloud.votes||{};cloud.votes[id]=cloud.votes[id]||{};cloud.votes[id][act]=arr;
+  renderAll();
   pushCloud(data);
 }
 
@@ -685,6 +701,32 @@ function showMentionToast(msg,spotId){
   mentionTimer=setTimeout(function(){toast.classList.remove('show')},6000);
 }
 document.querySelector('.mt-close').addEventListener('click',function(e){e.stopPropagation();document.getElementById('mentionToast').classList.remove('show')});
+
+// ===== EXPORT =====
+function exportData(){
+  var out={trip:[],notes:cloud.notes||[],exportTime:new Date().toLocaleString('zh-CN')};
+  for(var d=0;d<days.length;d++){
+    var day=days[d],spots=[];
+    for(var i=0;i<day.spots.length;i++){
+      var sp=day.spots[i],isDel=cloud.deletedSpots&&cloud.deletedSpots[sp.id];
+      var votes=(cloud.votes&&cloud.votes[sp.id])||{};
+      var cmts=(cloud.comments&&cloud.comments[sp.id])||[];
+      spots.push({id:sp.id,name:sp.name,time:sp.time,status:isDel?'已删除':'保留',wantGo:votes.up||[],canSkip:votes.skip||[],comments:cmts.map(function(c){return{who:c.name,text:c.text,replyTo:c.replyTo||null}})});
+    }
+    var added=(cloud.addedSpots&&cloud.addedSpots[day.day])||[];
+    for(var j=0;j<added.length;j++){
+      var asp=added[j],isDel2=cloud.deletedSpots&&cloud.deletedSpots[asp.id];
+      var votes2=(cloud.votes&&cloud.votes[asp.id])||{};
+      var cmts2=(cloud.comments&&cloud.comments[asp.id])||[];
+      spots.push({id:asp.id,name:asp.name,time:asp.time,status:isDel2?'已删除':'用户新增',addedBy:asp.addedBy||'',wantGo:votes2.up||[],canSkip:votes2.skip||[],comments:cmts2.map(function(c){return{who:c.name,text:c.text,replyTo:c.replyTo||null}})});
+    }
+    out.trip.push({day:day.day,date:day.date,title:day.title,spots:spots});
+  }
+  var json=JSON.stringify(out,null,2);
+  var pre=document.getElementById('exportPreview');
+  pre.style.display='block';pre.textContent=json;
+  if(navigator.clipboard){navigator.clipboard.writeText(json).then(function(){pre.textContent='✅ 已复制到剪贴板！\n\n'+json})}
+}
 
 // ===== RENDER ALL =====
 function renderAll(){renderItinerary();renderShopping();renderChecklist();renderNotes();checkMentions()}

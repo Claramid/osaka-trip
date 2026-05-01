@@ -54,18 +54,13 @@ export default {
         }
       }
 
-      // merge votes (last write wins per user per spot)
+      // merge votes (last write wins per action per spot)
       if (incoming.votes) {
         if (!existing.votes) existing.votes = {};
         for (const [k, acts] of Object.entries(incoming.votes)) {
           if (!existing.votes[k]) existing.votes[k] = {};
           for (const [act, names] of Object.entries(acts)) {
-            if (!existing.votes[k][act]) existing.votes[k][act] = [];
-            for (const name of names) {
-              if (existing.votes[k][act].indexOf(name) === -1) {
-                existing.votes[k][act].push(name);
-              }
-            }
+            existing.votes[k][act] = names;
           }
         }
       }
