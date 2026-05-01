@@ -261,6 +261,14 @@ input,textarea,button{font-family:inherit;font-size:inherit}
 </nav>
 
 <div class="backdrop" id="backdrop"></div>
+<div id="nameDialog" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center">
+  <div style="background:#fff;border-radius:14px;padding:24px 20px 16px;width:280px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
+    <div style="font-size:.95rem;font-weight:600;margin-bottom:6px">先告诉大家你是谁</div>
+    <div style="font-size:.82rem;color:#888;margin-bottom:14px">输入昵称后才能操作哦</div>
+    <input id="nameDialogInput" placeholder="你的昵称" maxlength="8" style="width:100%;border:1px solid #eee;border-radius:8px;padding:10px;font-size:.9rem;text-align:center;margin-bottom:12px">
+    <button id="nameDialogOk" style="width:100%;padding:10px;border:none;border-radius:8px;background:#c45c3e;color:#fff;font-size:.88rem;cursor:pointer">确定</button>
+  </div>
+</div>
 <div id="delDialog" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:500;background:rgba(0,0,0,.4);-webkit-display:flex;display:flex;align-items:center;justify-content:center">
   <div style="background:#fff;border-radius:14px;padding:24px 20px 16px;width:280px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.2)">
     <div style="font-size:.95rem;font-weight:600;margin-bottom:6px">确认删除</div>
@@ -300,6 +308,21 @@ function setSyncStatus(s){
   syncDot.className='sync-dot '+s;
   syncLabel.textContent=s==='ok'?'已同步':s==='loading'?'同步中…':'离线';
 }
+
+function requireName(){
+  var n=document.getElementById('userName').value.trim();
+  if(n)return n;
+  document.getElementById('nameDialog').style.display='flex';
+  return '';
+}
+document.getElementById('nameDialogOk').addEventListener('click',function(){
+  var v=document.getElementById('nameDialogInput').value.trim();
+  if(!v)return;
+  document.getElementById('userName').value=v;
+  localStorage.setItem('trip-user',v);
+  updAvatar();
+  document.getElementById('nameDialog').style.display='none';
+});
 
 function fetchWithTimeout(url,opts,ms){
   return new Promise(function(resolve,reject){
@@ -482,6 +505,7 @@ function bindEditable(){
 
 var pendingDelId='';
 function delSpot(id,el){
+  if(!requireName())return;
   pendingDelId=id;
   var card=el.closest('.spot'),name=card?card.querySelector('h3').textContent.replace(/📷.*/,'').trim():'此景点';
   document.getElementById('delDialogName').textContent='「'+name+'」将从行程中移除';
@@ -503,6 +527,7 @@ function restoreSpot(id){
 
 var addingDay='';
 function openAddSheet(dayKey){
+  if(!requireName())return;
   addingDay=dayKey;
   document.getElementById('addSheet').classList.add('open');
   document.getElementById('backdrop').classList.add('show');
@@ -524,8 +549,8 @@ document.getElementById('addSubmit').addEventListener('click',function(){
 });
 
 function vote(el){
+  var name=requireName();if(!name)return;
   var card=el.closest('.spot'),id=card?card.getAttribute('data-id'):'',act=el.getAttribute('data-act');
-  var name=$name.value.trim();if(!name){el.closest('.spot').querySelector('.spot-desc').textContent;return}
   var votes=(cloud.votes&&cloud.votes[id])||{};
   var arr=votes[act]?votes[act].slice():[];
   var idx=arr.indexOf(name);
@@ -544,7 +569,8 @@ function toggleCmt(el){
 
 function postCmt(input){
   var text=input.value.trim();if(!text)return;
-  var name=$name.value.trim()||'匿名旅伴',card=input.closest('.spot'),id=card?card.getAttribute('data-id'):'';
+  var name=requireName();if(!name)return;
+  var card=input.closest('.spot'),id=card?card.getAttribute('data-id'):'';
   openCmts[id]=true;
   var cmt={name:name,text:text,time:new Date().toLocaleString('zh-CN'),color:getC(name)};
   if(replyTarget[id]){cmt.replyTo=replyTarget[id];var cmts=(cloud.comments&&cloud.comments[id])||[];for(var i=cmts.length-1;i>=0;i--){if(cmts[i].name===replyTarget[id]){cmt.replyText=cmts[i].text.length>20?cmts[i].text.substring(0,20)+'…':cmts[i].text;break}}delete replyTarget[id]}
